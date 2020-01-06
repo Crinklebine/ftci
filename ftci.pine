@@ -1,0 +1,50 @@
+//@version=3
+// FTC (Full Timeframe Continuity) Pine Script
+// (c)2018 Crinklebine Crinklebine.com
+study("FTCi (The Strat)", overlay=true, precision=0)
+//study("FTC (The Strat)" )
+
+// write text credit
+plotshape(true, title="Crinklebine Version 1", style=shape.cross, color=#0080FF,  transp=0, location=location.bottom, text="Crinklebine.com", textcolor=#0080FF, show_last=1)
+
+// grab the 15m source and get flags for a green or red candle
+fifteenClose = security(tickerid, "15", close)
+fifteenOpen = security(tickerid, "15", open)
+//isFifteenRed = fifteenClose < fifteenOpen ? 1 : 0
+//isFifteenGreen = fifteenClose > fifteenOpen ? 1 : 0
+isFifteenRedFlag = fifteenClose < fifteenOpen
+isFifteenGreenFlag = fifteenClose > fifteenOpen
+// get the bar history status
+barFifteenIsHistoryFlag = barstate.ishistory
+
+// grab the 30m source and get flags for a green or red candle
+thirty(source) => security(tickerid, "30", source)
+//isThirtyRed = daily(close) < daily(open) ? 1 : 0
+//isThirtyGreen = daily(close) > daily(open) ? 1 : 0
+isThirtyRedFlag = thirty(close) < thirty(open)
+isThirtyGreenFlag = thirty(close) > thirty(open)
+// get the bar history status
+barThirtyIsHistoryFlag = thirty(barstate.ishistory)
+
+// grab the 60m source and get flags for a green or red candle
+sixty(source) => security(tickerid, "60", source)
+//isWeeklyRed = weekly(close) < weekly(open) ? 1 : 0
+//isWeeklyGreen = weekly(close) >  weekly(open) ? 1 : 0
+isSixtyRedFlag = sixty(close) <  sixty(open)
+isSixtyGreenFlag = sixty(close) >  sixty(open)
+// get the bar history status
+barSixtyIsHistoryFlag = sixty(barstate.ishistory)
+
+// debug plot
+//plot (interval==60 ? isMonthlyRed : 0 , color=red)
+//plot (interval==60 ? isMonthlyGreen : 0, color=green)
+
+// set an overall history flag of any bar is in a history barstate
+overallBarHistoryFlag = barFifteenIsHistoryFlag or barThirtyIsHistoryFlag or barSixtyIsHistoryFlag
+
+// perform logic to determine if FTC green, red or neutral and plotshape
+plotshape(interval==15 ? (isSixtyGreenFlag and isThirtyGreenFlag and isFifteenGreenFlag) : false, title="FTCi Green", style=shape.triangleup, location=location.top, color=#00ff00,  transp=0, text="FTCi", textcolor=#00ff00, show_last=1)
+plotshape(interval==15 ? (isSixtyRedFlag and isThirtyRedFlag and isFifteenRedFlag) : false, title="FTCi Red", style=shape.triangledown, location=location.top, color=#ff0000,  transp=0, text="FTCi", textcolor=#ff0000, show_last=1)
+plotshape(interval==15 ? ((not overallBarHistoryFlag) and not(isSixtyRedFlag and isThirtyRedFlag and isFifteenRedFlag) and not(isSixtyGreenFlag and isThirtyGreenFlag and isFifteenGreenFlag)) : false, title="FTCi Neutral", style=shape.square, location=location.top, color=#ffff00,  transp=0, text="FTCi", textcolor=yellow, show_last=1)
+plotshape(interval==15 ? (overallBarHistoryFlag and not(isSixtyRedFlag and isThirtyRedFlag and isFifteenRedFlag) and not(isSixtyGreenFlag and isThirtyGreenFlag and isFifteenGreenFlag)) : false, title="FTCi Wait", style=shape.square, location=location.top, color=#ffff00, transp=0, text="wait", textcolor=yellow, show_last=1)
+
